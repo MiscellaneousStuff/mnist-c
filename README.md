@@ -23,8 +23,8 @@ Train a CNN neural network purely in C on the MNIST dataset.
 ## TODO
 
 - [ ] Train MNIST in Python
-   - Torch (First)
-   - Numpy
+   - [x] Torch (First)
+   - [x] Implement addition task to learn gradient descent
 - [ ] Train MNIST in C (Port python)
    - Manual matrix operations or library?
    <!-- - Add Metal support for MacOS? -->
