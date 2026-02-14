@@ -48,8 +48,9 @@ class Layer: pass
 
 class Linear(Layer):
     def __init__(self, in_dim, out_dim):
-        self.w = torch.rand(out_dim, in_dim, dtype=torch.float)
-        self.b = torch.rand(out_dim, dtype=torch.float)
+        std = (2.0 / (in_dim + out_dim)) ** 0.5
+        self.w = torch.randn(out_dim, in_dim, dtype=torch.float) * std
+        self.b = torch.zeros(out_dim, dtype=torch.float)
         self.in_dim = in_dim
         self.out_dim = out_dim
         # self.b = torch.rand(out_dim, dtype=torch.float)
@@ -78,10 +79,10 @@ class LinearModel:
         grads = softmax_deriv(pred, target) # (class_0, class_1)
         self.fc.backward(x, grads, lr=1e-2)
 
-class XORModel:
-    def __init__(self):
-        self.fc1 = Linear(in_dim=2, out_dim=2)
-        self.fc2 = Linear(in_dim=2, out_dim=2)
+class MLP:
+    def __init__(self, in_dim, hidden_dim, out_dim):
+        self.fc1 = Linear(in_dim=in_dim, out_dim=hidden_dim)
+        self.fc2 = Linear(in_dim=hidden_dim, out_dim=out_dim)
         self.activations = {"sigmoid": []}
     def forward(self, x):
         # print("x:", x)
@@ -109,52 +110,50 @@ class XORModel:
         # update fc2
         softmax_grads = softmax_deriv(pred, target) # (class_0, class_1) dL/dz2
         
-        fc2 = self.fc2
-        grad_loss_act_0 = fc2.w[0][0] * softmax_grads[0] + fc2.w[1][0] * softmax_grads[1]
-        grad_loss_act_1 = fc2.w[0][1] * softmax_grads[0] + fc2.w[1][1] * softmax_grads[1]
-        grad_loss_act = torch.tensor([grad_loss_act_0, grad_loss_act_1])
+        grad_loss_act = self.fc2.w.T @ softmax_grads
 
         self.fc2.backward(sig_actives, softmax_grads, lr=lr)
 
         grad_loss_z1 = grad_loss_act * sig_actives * (1 - sig_actives)
         self.fc1.backward(x, grad_loss_z1, lr=lr)
 
-model = XORModel()
-lr = 1e-2
-epochs = 10000
-mean_losses = []
+if __name__ == "__main__":
+    model = MLP(2, 2, 2)
+    lr = 1e-2
+    epochs = 10000
+    mean_losses = []
 
-print(">>> training")
-for e in range(epochs):
-    losses = []
+    print(">>> training")
+    for e in range(epochs):
+        losses = []
+        for i in range(4):
+            x = X[i]
+            y = Y[i]
+            # pred
+            pred = model(x)
+            target = y
+            
+            # loss val
+            loss = cross_entropy_loss(pred, Y[i])
+            losses.append(loss)
+            model.backward(x, pred, y, lr=lr)
+        mean_loss = np.mean(losses)
+        mean_losses.append(mean_loss)
+        # print(mean_loss)
+
+    print(">>> testing")
     for i in range(4):
         x = X[i]
         y = Y[i]
-        # pred
+        
         pred = model(x)
         target = y
-        
-        # loss val
-        loss = cross_entropy_loss(pred, Y[i])
-        losses.append(loss)
-        model.backward(x, pred, y, lr=lr)
-    mean_loss = np.mean(losses)
-    mean_losses.append(mean_loss)
-    # print(mean_loss)
 
-print(">>> testing")
-for i in range(4):
-    x = X[i]
-    y = Y[i]
-    
-    pred = model(x)
-    target = y
+        print(
+            x,
+            torch.argmax(target),
+            torch.argmax(pred),
+        )
 
-    print(
-        x,
-        torch.argmax(target),
-        torch.argmax(pred),
-    )
-
-plt.plot(mean_losses)
-plt.show()
+    plt.plot(mean_losses)
+    plt.show()

@@ -27,6 +27,7 @@ Train a CNN neural network purely in C on the MNIST dataset.
    - [x] Implement addition task to learn gradient descent
    - [x] Implement basic linear classifier (OR gate)
    - [x] Implement basic MLP classifier (XOR gate)
+   - [ ] Replace torch MLP with manual MLP and train MNIST
 
 - [ ] Train MNIST in C (Port python)
    - Manual matrix operations or library?
