@@ -66,6 +66,12 @@ int main(int argc, char *argv[]) {
     printf("Hello, World!\n");
     Mat a = mat_from((float[]){1, 2, 3,
                                 4, 5, 6}, 2, 3);
+    Mat b = mat_from((float[]){0.1, 0.2,
+                               0.3, 0.4,
+                               0.5, 0.6}, 3, 2);
+    Mat r = matmul(a, b);
     mat_print(a);
+    mat_print(b);
+    mat_print(r);
     return 0;
 }
