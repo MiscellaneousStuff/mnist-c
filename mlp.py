@@ -6,6 +6,13 @@ random.seed(42)
 np.random.seed(42)
 torch.manual_seed(42)
 
+def sigmoid(x):
+    return 1 / 1 + torch.exp(-x)
+
+def sigmoid_deriv(x):
+    nexpx = torch.exp(-x)
+    return nexpx / (1 + nexpx) ** 2
+
 def softmax(logits):
     log_logits = torch.exp(logits)
     s = torch.sum(log_logits)
@@ -25,7 +32,7 @@ XY = [
     ([0, 0], [1, 0]), # (binary flag for two inputs), (one hot encoded truth value)
     ([0, 1], [0, 1]),
     ([1, 0], [0, 1]),
-    ([1, 1], [0, 1])
+    ([1, 1], [1, 0])
 ]
 
 X = [pair[0] for pair in XY]
@@ -57,7 +64,7 @@ class Linear(Layer):
     def update(self, grads, lr):
         self.w -= grads * lr
 
-class Model:
+class LinearModel:
     def __init__(self):
         self.fc = Linear(in_dim=2, out_dim=2)
     def forward(self, x):
@@ -71,24 +78,40 @@ class Model:
         grads = softmax_deriv(pred, target) # (class_0, class_1)
         self.fc.backward(x, grads, lr=1e-2)
 
-class Optim:
-    pass
+class XORModel:
+    def __init__(self):
+        self.fc1 = Linear(in_dim=2, out_dim=2)
+        self.fc2 = Linear(in_dim=2, out_dim=2)
+    def forward(self, x):
+        x = self.fc1(x)
+        x = sigmoid(x)
+        x = self.fc2(x)
+        x = softmax(x)
+        return x
+    def __call__(self, x):
+        return self.forward(x)
+    def backward(self, x, pred, target):
+        assert pred.shape == target.shape
+        grads = softmax_deriv(pred, target) # (class_0, class_1)
 
-model = Model()
+model = XORModel()
 lr = 1e-2
 epochs = 100
 for e in range(epochs):
     # pred
-    pred = model(X[1])
-    target = Y[1]
+    pred = model(X[3])
+    target = Y[3]
     
     # loss val
-    loss = cross_entropy_loss(pred, Y[1])
+    loss = cross_entropy_loss(pred, Y[3])
 
-    model.backward(
-        x=X[1],
-        pred=pred,
-        target=target
-    )
+    print(X[3], Y[3], pred)
 
-    print(e, pred, loss)
+    exit()
+    # model.backward(
+    #     x=X[3],
+    #     pred=pred,
+    #     target=target
+    # )
+
+    # print(e, pred, loss)
