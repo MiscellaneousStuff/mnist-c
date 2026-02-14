@@ -54,7 +54,7 @@ class Linear(Layer):
         self.out_dim = out_dim
         # self.b = torch.rand(out_dim, dtype=torch.float)
     def forward(self, x):
-        return self.w @ x # + self.b
+        return self.w @ x + self.b
     def __call__(self, x):
         return self.forward(x)
     def backward(self, x, grads, lr): # grads := (class_0, ..., class_n)
