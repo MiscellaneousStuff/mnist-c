@@ -32,3 +32,6 @@ Thumbs.db
 *.pt
 *.pth
 .env
+
+# c output
+main
