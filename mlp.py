@@ -22,10 +22,10 @@ def softmax_deriv(pred, target):
 # or gate
 
 XY = [
-    ([0, 0], [1, 0]),
+    ([0, 0], [1, 0]), # (binary flag for two inputs), (one hot encoded truth value)
     ([0, 1], [0, 1]),
     ([1, 0], [0, 1]),
-    ([1, 1], [0, 0])
+    ([1, 1], [0, 1])
 ]
 
 X = [pair[0] for pair in XY]
@@ -41,13 +41,21 @@ class Layer: pass
 class Linear(Layer):
     def __init__(self, in_dim, out_dim):
         self.w = torch.rand(out_dim, in_dim, dtype=torch.float)
+        self.in_dim = in_dim
+        self.out_dim = out_dim
         # self.b = torch.rand(out_dim, dtype=torch.float)
     def forward(self, x):
-        return self.w.T @ x # + self.b
+        return self.w @ x # + self.b
     def __call__(self, x):
         return self.forward(x)
-    def update(self):
-        pass
+    def backward(self, x, grads, lr): # grads := (class_0, ..., class_n)
+        grads = torch.stack([
+            (grad * x).detach().clone()
+        for grad in grads])
+        self.update(grads, lr)
+
+    def update(self, grads, lr):
+        self.w -= grads * lr
 
 class Model:
     def __init__(self):
@@ -58,43 +66,29 @@ class Model:
         return x
     def __call__(self, x):
         return self.forward(x)
-    def backward(self):
-        # update
-        # [0.1, 0.9] - [0, 1] := [-0.1, +0.1]
-        d_loss_over_d_z = softmax_deriv(pred, Y[1]) # (class_0, class_1)
-        c0_w0_gradient = d_loss_over_d_z[0] * X[1][0]
-        c0_w1_gradient = d_loss_over_d_z[0] * X[1][1]
-        c1_w0_gradient = d_loss_over_d_z[1] * X[1][0]
-        c1_w1_gradient = d_loss_over_d_z[1] * X[1][1]
+    def backward(self, x, pred, target):
+        assert pred.shape == target.shape
+        grads = softmax_deriv(pred, target) # (class_0, class_1)
+        self.fc.backward(x, grads, lr=1e-2)
 
-        print(
-            "gradients:\n",
-            c0_w0_gradient,
-            c0_w1_gradient,
-            c1_w0_gradient,
-            c1_w1_gradient,
-        )
-
-        # class 0 weight updates
-        self.fc.w[0][0] -= (c0_w0_gradient * lr) # class 0, input 0 weight updates
-        self.fc.w[0][1] -= (c0_w1_gradient * lr) # class 0, input 1 weight updates
-
-        # class 1 weight updates
-        self.fc.w[1][0] -= (c1_w0_gradient * lr) # class 1, input 0 weight updates
-        self.fc.w[1][1] -= (c1_w1_gradient * lr) # class 1, input 1 weight updates
+class Optim:
+    pass
 
 model = Model()
 lr = 1e-2
 epochs = 100
 for e in range(epochs):
     # pred
-    z = model(X[1])
-    pred = softmax(z)
+    pred = model(X[1])
+    target = Y[1]
     
     # loss val
     loss = cross_entropy_loss(pred, Y[1])
 
-    model.backward()
-    # print(X[1], Y[1], weights, loss, pred, w0_gradient, w1_gradient)
+    model.backward(
+        x=X[1],
+        pred=pred,
+        target=target
+    )
 
-    print(e, pred, loss) # , weights)
+    print(e, pred, loss)
