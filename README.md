@@ -2,12 +2,11 @@
 
 ## Overview
 
-Train an MLP and then a CNN neural network purely in C on the MNIST dataset.
+Train an MLP neural network purely in C on the MNIST dataset.
 
 ## Models
 
 - [ ] Multi-layer perceptron
-- [ ] CNN
 
 ## Process
 
@@ -30,5 +29,9 @@ Train an MLP and then a CNN neural network purely in C on the MNIST dataset.
    - [x] Replace torch MLP with manual MLP and train MNIST
 
 - [ ] Train MNIST in C (Port python)
-   - Manual matrix operations or library?
-   <!-- - Add Metal support for MacOS? -->
+   - [ ] Port XOR MLP task
+      - [ ] Forward pass
+      - [ ] Backward pass
+   - [ ] Port MNIST MLP task
+      - [ ] Port dataloader
+      - [ ] Compare accuracy vs python

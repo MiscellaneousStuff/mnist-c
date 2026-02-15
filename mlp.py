@@ -10,10 +10,6 @@ torch.manual_seed(42)
 def sigmoid(x):
     return 1 / (1 + torch.exp(-x))
 
-def sigmoid_deriv(x):
-    nexpx = torch.exp(-x)
-    return nexpx / (1 + nexpx) ** 2
-
 def softmax(logits):
     log_logits = torch.exp(logits)
     s = torch.sum(log_logits)
